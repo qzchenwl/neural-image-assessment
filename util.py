@@ -1,15 +1,38 @@
 import PIL
+import random
 import numpy as np
 from keras.preprocessing.image import load_img, img_to_array, array_to_img, flip_axis
 
 VGG_MEAN = [123.68, 116.78, 103.94]
+AVA_IMAGE_DIR = '/data/raid10/test/AVA_dataset/images/'
 
 def list_images(file):
     """
     Get all the images and labels in file
     """
+    filenames = []
+    labels = []
     with open(file, 'r') as f:
         lines = f.readlines()
+        for i, line in enumerate(lines):
+            tokens = line.split()
+            filename = AVA_IMAGE_DIR + tokens[1] + '.jpg'
+            scores = np.array(tokens[2:12], dtype='float32')
+            scores /= scores.sum()
+            filenames.append(filename)
+            labels.append(scores)
+    return filenames, labels
+
+def train_test_split(X, y, train_size=0.9):
+    """
+    X_train, y_train, X_test, y_test = train_test_split(X, y, test_size)
+    """
+    Xy = list(zip(X, y))
+    random.shuffle(Xy)
+    train_count = int(len(Xy) * train_size)
+    X_train, y_train = zip(*Xy[0:train_count])
+    X_test, y_test = zip(*Xy[train_count:])
+    return X_train, y_train, X_test, y_test
 
 def random_crop(img, size):
     """
@@ -114,3 +137,28 @@ def val_preprocess_mobilenet(img, label):
     return normalized_img, label
 
 
+class AVAGenerator(object):
+    """
+    Generates data for keras
+    """
+    def __init__(self, filenames, labels, batch_size, shuffle_size):
+        self.filenames_and_labels = list(zip(filenames, labels))
+        self.batch_size = batch_size
+        self.shuffle_size = shuffle_size
+
+    def generate(self):
+        while True:
+            # shuffle
+            head = self.filenames_and_labels[0:self.shuffle_size]
+            tail = self.filenames_and_labels[self.shuffle_size:]
+            random.shuffle(head)
+            self.filenames_and_labels = head + tail
+
+            # batch
+            batch = self.filenames_and_labels[0:self.batch_size]
+            rest = self.filenames_and_labels[self.batch_size:]
+            self.filenames_and_labels = rest + batch
+
+            filenames, labels = zip(*batch)
+
+            yield list(filenames), list(labels)
