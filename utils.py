@@ -155,7 +155,8 @@ def generate(filenames, labels, batch_size, shuffle_size, processing_fn):
         filenames = list(filenames)
         labels = list(labels)
 
-        imgs = list(map(lambda img: processing_fn(img), map(lambda filename: parse_fn(filename), filenames)))
+        labels = np.array(labels)
+        imgs = np.array(list(map(lambda img: processing_fn(img), map(lambda filename: parse_fn(filename), filenames))))
 
         yield imgs, labels
 
