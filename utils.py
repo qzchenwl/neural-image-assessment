@@ -2,9 +2,9 @@ import PIL
 import random
 import numpy as np
 from keras.preprocessing.image import load_img, img_to_array, array_to_img, flip_axis
+from data import AVA_IMAGE_DIR
 
 VGG_MEAN = [123.68, 116.78, 103.94]
-AVA_IMAGE_DIR = '/data/raid10/test/AVA_dataset/images/'
 
 def list_images(file):
     """
