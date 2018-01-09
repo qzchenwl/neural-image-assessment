@@ -1,9 +1,9 @@
 from keras.models import Model
 from keras.layers import Dense, Dropout
-from keras.applications.mobilenet import MobileNet
+from keras.applications.vgg16 import VGG16
 from keras.callbacks import ModelCheckpoint, TensorBoard
 from keras.optimizers import Adam, SGD
-from utils import list_images, training_preprocess_mobilenet, val_preprocess_mobilenet, generate
+from utils import list_images, training_preprocess_vgg, val_preprocess_vgg, generate
 from losses import emd
 from data import TRAIN_DATASET, VAL_DATASET
 
@@ -34,19 +34,19 @@ def train(args):
     train_filenames, train_labels = list_images(TRAIN_DATASET)
     val_filenames, val_labels = list_images(VAL_DATASET)
 
-    train_generator = generate(train_filenames, train_labels, batch_size=args.batch_size, shuffle_size=args.shuffle_size, processing_fn=training_preprocess_mobilenet)
-    val_generator   = generate(val_filenames,   val_labels,   batch_size=args.batch_size, shuffle_size=args.shuffle_size, processing_fn=val_preprocess_mobilenet)
+    train_generator = generate(train_filenames, train_labels, batch_size=args.batch_size, shuffle_size=args.shuffle_size, processing_fn=training_preprocess_vgg)
+    val_generator   = generate(val_filenames,   val_labels,   batch_size=args.batch_size, shuffle_size=args.shuffle_size, processing_fn=val_preprocess_vgg)
 
     train_sample_size = len(train_filenames)
     val_sample_size   = len(val_filenames)
 
-    checkpoint = ModelCheckpoint('weights/mobilenet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint('weights/vgg16_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True, mode='min')
     tensorboard = TensorBoard()
     callbacks = [checkpoint, tensorboard]
 
 
     # setup model
-    base_model = MobileNet(input_shape=(224,224,3), alpha=1, include_top=False, pooling='avg')
+    base_model = VGG16(input_shape=(224,224,3), include_top=False, pooling='avg')
     model = add_new_top_layer(base_model)
 
     # transfer learning
