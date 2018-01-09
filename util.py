@@ -45,7 +45,7 @@ def random_crop(img, size):
     crop_h, crop_w = size
 
     range_h = height - crop_h
-    range_w = width -crop_w
+    range_w = width - crop_w
 
     offset_h = 0 if range_h == 0 else np.random.randint(range_h)
     offset_w = 0 if range_w == 0 else np.random.randint(range_w)
@@ -83,7 +83,7 @@ def random_flip_left_right(img):
 # Preprocessing (for both training and validation):
 # (1) Decode the image from jpg format
 # (2) Resize the image so its smaller side is 256 pixels long
-def parse_function(filename, label):
+def parse_fn(filename):
     img = load_img(filename)
 
     smallest_side = 256.0
@@ -92,36 +92,36 @@ def parse_function(filename, label):
     resized_img = img.resize((int(img.width * scale), int(img.height * scale)), PIL.Image.BILINEAR)
     img_array = img_to_array(resized_img)
 
-    return img_array, label
+    return img_array
 
 # Preprocessing (for training)
 # (3) Take a random 224x224 crop to the scaled image
 # (4) Horizontally flip the image with probability 1/2
 # (5) Substract the per color mean `VGG_MEAN`
 # Note: we don't normalize the data here, as VGG was trained without normalization
-def training_preprocess_vgg(img, label):
+def training_preprocess_vgg(img):
     crop_img = random_crop(img, (224, 224))
     flip_img = random_flip_left_right(crop_img)
 
     means = np.reshape(VGG_MEAN, [1, 1, 3])
     centered_img = flip_img - means
 
-    return centered_img, label
+    return centered_img
 
-def training_preprocess_mobilenet(img, label):
+def training_preprocess_mobilenet(img):
     crop_img = random_crop(img, (224, 224))
     flip_img = random_flip_left_right(crop_img)
 
     normalized_img = (flip_img - 127.5) / 127.5
 
-    return normalized_img, label
+    return normalized_img
 
 
 # Preprocessing (for validation)
 # (3) Take a central 224x224 crop to the scaled image
 # (4) Substract the per color mean `VGG_MEAN`
 # Note: we don't normalize the data here, as VGG was trained without normalization
-def val_preprocess_vgg(img, label):
+def val_preprocess_vgg(img):
     crop_img = center_crop(img, (224, 224))
 
     means = np.reshape(VGG_MEAN, [1, 1, 3])
@@ -129,36 +129,34 @@ def val_preprocess_vgg(img, label):
 
     return centered_img
 
-def val_preprocess_mobilenet(img, label):
+def val_preprocess_mobilenet(img):
     crop_img = center_crop(img, (224, 224))
 
-    normalized_img = (flip_img - 127.5) / 127.5
+    normalized_img = (crop_img - 127.5) / 127.5
 
-    return normalized_img, label
+    return normalized_img
+
+def generate(filenames, labels, batch_size, shuffle_size, processing_fn):
+    filenames_and_labels = list(zip(filenames, labels))
+
+    while True:
+        # shuffle
+        head = filenames_and_labels[0:shuffle_size]
+        tail = filenames_and_labels[shuffle_size:]
+        random.shuffle(head)
+        filenames_and_labels = head + tail
+
+        # batch
+        batch = filenames_and_labels[0:batch_size]
+        rest = filenames_and_labels[batch_size:]
+        filenames_and_labels = rest + batch
+
+        filenames, labels = zip(*batch)
+        filenames = list(filenames)
+        labels = list(labels)
+
+        imgs = list(map(lambda img: processing_fn(img), map(lambda filename: parse_fn(filename), filenames)))
+
+        yield imgs, labels
 
 
-class AVAGenerator(object):
-    """
-    Generates data for keras
-    """
-    def __init__(self, filenames, labels, batch_size, shuffle_size):
-        self.filenames_and_labels = list(zip(filenames, labels))
-        self.batch_size = batch_size
-        self.shuffle_size = shuffle_size
-
-    def generate(self):
-        while True:
-            # shuffle
-            head = self.filenames_and_labels[0:self.shuffle_size]
-            tail = self.filenames_and_labels[self.shuffle_size:]
-            random.shuffle(head)
-            self.filenames_and_labels = head + tail
-
-            # batch
-            batch = self.filenames_and_labels[0:self.batch_size]
-            rest = self.filenames_and_labels[self.batch_size:]
-            self.filenames_and_labels = rest + batch
-
-            filenames, labels = zip(*batch)
-
-            yield list(filenames), list(labels)
