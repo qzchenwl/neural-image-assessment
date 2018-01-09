@@ -136,7 +136,7 @@ def val_preprocess_mobilenet(img):
 
     return normalized_img
 
-def generate(filenames, labels, batch_size, shuffle_size, processing_fn):
+def generate(filenames, labels, batch_size, shuffle_size, processing_fn, repeat=True):
     filenames_and_labels = list(zip(filenames, labels))
 
     while True:
@@ -149,7 +149,8 @@ def generate(filenames, labels, batch_size, shuffle_size, processing_fn):
         # batch
         batch = filenames_and_labels[0:batch_size]
         rest = filenames_and_labels[batch_size:]
-        filenames_and_labels = rest + batch
+        if repeat:
+            filenames_and_labels = rest + batch
 
         filenames, labels = zip(*batch)
         filenames = list(filenames)

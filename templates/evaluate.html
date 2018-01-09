@@ -1,0 +1,35 @@
+$def with (indexes, urls, score_dists, means, stds)
+
+$def dist(score_dist):
+    <table>
+        $for prob in (score_dist):
+            <tr>
+                <td>$loop.index</td>
+                <td style="background-image: -webkit-gradient(linear, left top, right top, from(green), to(white), color-stop($prob, green), color-stop($prob, white));min-width: 100px; min-height: 5px;"></td>
+            </tr>
+    </table>
+
+
+$def tr(url, score_dist, mean, std):
+    <tr>
+        <td><img width="500" src="$url"/></td>
+        <td>$mean ± $std</td>
+        <td>$:dist(score_dist)</td>
+    </tr>
+
+<table>
+    <thead>
+            <td>图片</td><td>平均分±标准差</td><td>得分分布</td>
+    <thead>
+    <tbody>
+        $for i in indexes:
+            $:tr(urls[i], score_dists[i], means[i], stds[i])
+    </tbody>
+</table>
+
+<style>
+    td, th {
+        border: 1px solid #ddd;
+    }
+</style>
+
