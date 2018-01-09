@@ -1,0 +1,39 @@
+$def with (basenames, preds, labels, losses, loss)
+
+$def dist(score_dist):
+    <table>
+        $for prob in (score_dist):
+            <tr>
+                <td>$loop.index</td>
+                <td style="background-image: -webkit-gradient(linear, left top, right top, from(green), to(white), color-stop($prob, green), color-stop($prob, white));min-width: 100px; min-height: 5px;"></td>
+            </tr>
+    </table>
+
+
+$def tr(basename, pred, label, loss):
+    <tr>
+        <td><img width="500" src="http://home.chenwl.com/share/AVA_dataset/images/$basename"/></td>
+        <td>$:dist(pred)</td>
+        <td>$:dist(label)</td>
+        <td>$loss</td>
+    </tr>
+
+EMD LOSS: $loss <br/>
+
+<table>
+    <thead>
+        <td>图片</td><td>预测分</td><td>实际分</td><td>EMD</td>
+    <thead>
+    <tbody>
+        $for basename in basenames:
+            $ i = loop.index0
+            $:tr(basenames[i], preds[i], labels[i], losses[i])
+    </tbody>
+</table>
+
+<style>
+    td, th {
+        border: 1px solid #ddd;
+    }
+</style>
+

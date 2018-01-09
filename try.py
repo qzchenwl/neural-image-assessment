@@ -1,11 +1,17 @@
 import sys
+import os
 import json
+from random import shuffle
 import numpy as np
 import web
 from web import form
 from urllib.request import urlretrieve
+import tensorflow as tf
 
 from evaluate_mobilenet import predict
+from data import VAL_DATASET, TEST_DATASET
+from losses import emd
+from utils import list_images
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -29,7 +35,10 @@ def download(url):
 
 render = web.template.render('templates/')
 
-urls = ('/', 'index')
+urls = ('/', 'index',
+        '/random-val', 'random_val',
+        '/random-test', 'random_test',
+        )
 app = web.application(urls, globals())
 
 myform = form.Form(form.Textarea('urls')) 
@@ -55,6 +64,40 @@ class index:
         stds = [ round(std(score_dist), 2) for score_dist in score_dists ]
         indexes = sorted(range(len(means)), key=lambda i: means[i] * -1)
         return render.evaluate(indexes, urls, score_dists, means, stds)
+
+class random_val:
+    def GET(self):
+        files, labels = list_images(VAL_DATASET)
+        files_and_labels = list(zip(files, labels))
+        shuffle(files_and_labels)
+        files_and_labels = files_and_labels[0:10]
+        files, labels = zip(*files_and_labels)
+        files = list(files)
+        labels = np.array(list(labels))
+        basenames = list(map(lambda f: os.path.basename(f), files))
+        preds = predict(files)
+        sess = tf.Session()
+        losses = [sess.run(emd(preds[i], labels[i])) for i in range(len(preds)) ]
+        loss = sess.run(emd(preds, labels))
+        return render.random(basenames, preds, labels, losses, loss)
+
+class random_test:
+    def GET(self):
+        files, labels = list_images(TEST_DATASET)
+        files_and_labels = list(zip(files, labels))
+        shuffle(files_and_labels)
+        files_and_labels = files_and_labels[0:10]
+        files, labels = zip(*files_and_labels)
+        files = list(files)
+        labels = np.array(list(labels))
+        basenames = list(map(lambda f: os.path.basename(f), files))
+        preds = predict(files)
+        sess = tf.Session()
+        losses = [sess.run(emd(preds[i], labels[i])) for i in range(len(preds)) ]
+        loss = sess.run(emd(preds, labels))
+        return render.random(basenames, preds, labels, losses, loss)
+
+
 
 if __name__=="__main__":
     web.internalerror = web.debugerror
