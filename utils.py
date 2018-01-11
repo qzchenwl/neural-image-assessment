@@ -136,6 +136,12 @@ def val_preprocess_mobilenet(img):
 
     return normalized_img
 
+def val_preprocess_inceptionresnetv2(img):
+    crop_img = center_crop(img, (224, 224))
+    normalized_img = (crop_img - 127.5) / 127.5
+    return normalized_img
+
+
 def generate(filenames, labels, batch_size, shuffle_size, processing_fn, repeat=True):
     filenames_and_labels = list(zip(filenames, labels))
 

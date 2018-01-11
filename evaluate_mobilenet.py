@@ -18,7 +18,7 @@ def add_new_top_layer(base_model):
     return model
 
 # setup model
-base_model = MobileNet(input_shape=(224,224,3), alpha=1, include_top=False, pooling='avg')
+base_model = MobileNet(input_shape=(224,224,3), alpha=1, include_top=False, pooling='avg', weights=None)
 model = add_new_top_layer(base_model)
 model.load_weights('weights/mobilenet_weights.h5')
 

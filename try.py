@@ -8,7 +8,7 @@ from web import form
 from urllib.request import urlretrieve
 import tensorflow as tf
 
-from evaluate_mobilenet import predict
+from evaluate_inceptresnet import predict
 from data import VAL_DATASET, TEST_DATASET
 from losses import emd
 from utils import list_images
