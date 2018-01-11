@@ -40,7 +40,7 @@ def train(args):
     train_sample_size = len(train_filenames)
     val_sample_size   = len(val_filenames)
 
-    checkpoint = ModelCheckpoint('weights/mobilenet_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True, mode='min')
+    checkpoint = ModelCheckpoint('weights/inceptionv2_weights.h5', monitor='val_loss', verbose=1, save_weights_only=True, save_best_only=True, mode='min')
     tensorboard = TensorBoard()
     callbacks = [checkpoint, tensorboard]
 
@@ -77,7 +77,7 @@ def train(args):
         callbacks=callbacks
     )
 
-    model.save('weights/mobilenet-ft.model')
+    model.save('weights/inceptionv2_ft.model')
 
 
 if __name__ == '__main__':

@@ -77,7 +77,7 @@ def train(args):
         callbacks=callbacks
     )
 
-    model.save('weights/mobilenet-ft.model')
+    model.save('weights/vgg16-ft.model')
 
 
 if __name__ == '__main__':
