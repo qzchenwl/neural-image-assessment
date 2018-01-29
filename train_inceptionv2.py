@@ -1,3 +1,4 @@
+import os
 from keras.models import Model
 from keras.layers import Dense, Dropout
 from keras.applications.inception_resnet_v2 import InceptionResNetV2
@@ -27,7 +28,7 @@ def setup_transfer_learning(model, base_model):
 def setup_finetuning(model):
     for layer in model.layers:
         layer.trainable = True
-    model.compile(optimizer=SGD(lr=1e-4, momentum=0.9), loss=emd)
+    model.compile(optimizer=Adam(lr=5e-6), loss=emd)
 
 def train(args):
     # prepare data
@@ -46,22 +47,24 @@ def train(args):
 
 
     # setup model
-    base_model = InceptionResNetV2(input_shape=(224,224,3), alpha=1, include_top=False, pooling='avg')
+    base_model = InceptionResNetV2(input_shape=(224,224,3), include_top=False, pooling='avg')
     model = add_new_top_layer(base_model)
+    if os.path.exists('weights/inceptionv2_weights.h5'):
+        model.load_weights('weights/inceptionv2_weights.h5')
 
-    # transfer learning
-    setup_transfer_learning(model, base_model)
+    ## transfer learning
+    #setup_transfer_learning(model, base_model)
 
-    model.summary()
-    history_tl = model.fit_generator(
-        train_generator,
-        validation_data=val_generator,
-        steps_per_epoch=(train_sample_size//args.batch_size),
-        validation_steps=(val_sample_size//args.batch_size),
-        epochs=args.epochs,
-        verbose=1,
-        callbacks=callbacks
-    )
+    #model.summary()
+    #history_tl = model.fit_generator(
+    #    train_generator,
+    #    validation_data=val_generator,
+    #    steps_per_epoch=(train_sample_size//args.batch_size),
+    #    validation_steps=(val_sample_size//args.batch_size),
+    #    epochs=args.epochs,
+    #    verbose=1,
+    #    callbacks=callbacks
+    #)
 
     # finetuning
     setup_finetuning(model)
@@ -88,5 +91,5 @@ if __name__ == '__main__':
     args = atdict({})
     args.batch_size = 32
     args.shuffle_size = 100
-    args.epochs = 3
+    args.epochs = 200
     train(args)
